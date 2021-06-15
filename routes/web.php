@@ -19,3 +19,7 @@ $router->post('/login', 'LoginController@login');
 
 $router->post('/obtener_menu', 'LoginController@obtener_menu');
 
+$router->get('/obtener_roles', 'RolController@obtener_roles');
+
+$router->get('/obtener_usuarios', 'UsuarioController@obtener_usuarios');
+
