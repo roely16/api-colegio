@@ -23,3 +23,6 @@ $router->get('/obtener_roles', 'RolController@obtener_roles');
 
 $router->get('/obtener_usuarios', 'UsuarioController@obtener_usuarios');
 
+$router->post('/registrar_alumno', 'AlumnoController@registrar_alumno');
+
+$router->post('/obtener_alumnos', 'AlumnoController@obtener_alumnos');
