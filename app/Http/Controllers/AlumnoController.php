@@ -8,9 +8,13 @@
     use App\Alumno;
     use App\Gestion;
     use App\DetalleGestion;
+    use App\EstadoGestion;
+    use App\Usuario;
 
     use App\Mail\GestionMail;
     use Illuminate\Support\Facades\Mail;
+
+    use Illuminate\Support\Facades\Crypt;
 
     class AlumnoController extends Controller{
 
@@ -108,34 +112,122 @@
             if (!$matricula) {
                 
                 $alumnos = app('db')->select("  SELECT 
-                                                t2.id,
-                                                t2.primer_nombre,
-                                                t2.segundo_nombre,
-                                                t2.primer_apellido,
-                                                t2.segundo_apellido,
-                                                t2.email,
-                                                t2.telefono
-                                            FROM alumno t1
-                                            INNER JOIN persona t2
-                                            ON t1.persona_id = t2.id 
-                                            WHERE t1.matricula IS NULL
+                                                    t2.id,
+                                                    t2.primer_nombre,
+                                                    t2.segundo_nombre,
+                                                    t2.primer_apellido,
+                                                    t2.segundo_apellido,
+                                                    t2.email,
+                                                    t2.telefono
+                                                FROM alumno t1
+                                                INNER JOIN persona t2
+                                                ON t1.persona_id = t2.id 
+                                                WHERE t1.matricula IS NULL
                                         ");
+
+                foreach ($alumnos as $alumno) {
+                    
+                    $gestion = Gestion::where('alumno_id', $alumno->id)->where('tipo_gestion_id', 1)->first();
+
+                    $detalle_gestion = DetalleGestion::where('gestion_id', $gestion->id)->orderBy('id', 'desc')->first();
+                    
+                    $estado = EstadoGestion::find($detalle_gestion->estado_id);
+
+                    $alumno->gestion = $gestion->id;
+                    $alumno->estado = $estado->nombre;
+
+                }
+
+                $headers = [
+                    [
+                        "text" => "ID",
+                        "value" => "id",
+                        "width" => "5%"
+                    ],
+                    [
+                        "text" => "Gestión",
+                        "value" => "gestion",
+                        "width" => "10%"
+                    ],
+                    [
+                        "text" => "Nombre",
+                        "value" => "nombre",
+                        "width" => "30%"
+                    ],
+                    [
+                        "text" => "Estado",
+                        "value" => "estado",
+                        "width" => "20%"
+                    ],
+                    [
+                        "text" => "Email",
+                        "value" => "email",
+                        "width" => "15%"
+                    ],
+                    [
+                        "text" => "Teléfono",
+                        "value" => "telefono",
+                        "width" => "15%"
+                    ],
+                    [
+                        "text" => "Acciones",
+                        "value" => "acciones",
+                        "width" => "5%",
+                        "align" => "end",
+                        "sortable" => false
+                    ]
+                ];
 
             }else{
 
                 $alumnos = app('db')->select("  SELECT 
-                                                t2.id,
-                                                t2.primer_nombre,
-                                                t2.segundo_nombre,
-                                                t2.primer_apellido,
-                                                t2.segundo_apellido,
-                                                t2.email,
-                                                t2.telefono
-                                            FROM alumno t1
-                                            INNER JOIN persona t2
-                                            ON t1.persona_id = t2.id 
-                                            WHERE t1.matricula IS NOT NULL
+                                                    t2.id,
+                                                    t2.primer_nombre,
+                                                    t2.segundo_nombre,
+                                                    t2.primer_apellido,
+                                                    t2.segundo_apellido,
+                                                    t2.email,
+                                                    t2.telefono
+                                                FROM alumno t1
+                                                INNER JOIN persona t2
+                                                ON t1.persona_id = t2.id 
+                                                WHERE t1.matricula IS NOT NULL
                                         ");
+
+                $headers = [
+                    [
+                        "text" => "ID",
+                        "value" => "id",
+                        "width" => "5%"
+                    ],
+                    [
+                        "text" => "Nombre",
+                        "value" => "nombre",
+                        "width" => "30%"
+                    ],
+                    [
+                        "text" => "Grado",
+                        "value" => "grado",
+                        "width" => "30%"
+                    ],
+                    [
+                        "text" => "Email",
+                        "value" => "email",
+                        "width" => "15%"
+                    ],
+                    [
+                        "text" => "Teléfono",
+                        "value" => "telefono",
+                        "width" => "15%"
+                    ],
+                    [
+                        "text" => "Acciones",
+                        "value" => "acciones",
+                        "width" => "5%",
+                        "align" => "end",
+                        "sortable" => false
+                    ]
+                ];
 
             }
 
@@ -145,46 +237,124 @@
 
             }
 
-            $headers = [
-                [
-                    "text" => "ID",
-                    "value" => "id",
-                    "width" => "5%"
-                ],
-                [
-                    "text" => "Nombre",
-                    "value" => "nombre",
-                    "width" => "30%"
-                ],
-                [
-                    "text" => "Grado",
-                    "value" => "grado",
-                    "width" => "30%"
-                ],
-                [
-                    "text" => "Email",
-                    "value" => "email",
-                    "width" => "15%"
-                ],
-                [
-                    "text" => "Teléfono",
-                    "value" => "telefono",
-                    "width" => "15%"
-                ],
-                [
-                    "text" => "Acciones",
-                    "value" => "acciones",
-                    "width" => "5%",
-                    "align" => "end",
-                    "sortable" => false
-                ]
-            ];
+            
 
             $response = [
                 "items" => $alumnos,
                 "headers" => $headers
             ];
 
+            return response()->json($response);
+
+        }
+
+        public function detalle_alumno(Request $request){
+
+            return response()->json($request);
+
+        }
+
+        public function estados_alumno(Request $request){
+
+            $estados = app('db')->select("  SELECT *
+                                            FROM estado_gestion
+                                            WHERE id NOT IN (
+                                                SELECT 
+                                                    estado_id
+                                                FROM detalle_gestion
+                                                WHERE gestion_id = '$request->gestion_id'
+                                            )");
+
+            return response()->json($estados);
+
+        }
+
+        public function actualizar_gestion(Request $request){
+
+            // Validar si el estado requiere ejectuar algun proceso
+            $estado = EstadoGestion::find($request->estado_id);
+
+            if ($estado->proceso) {
+                
+                $result = $this->{$estado->proceso}($request);
+
+                return response()->json($result->original);
+
+            }
+
+            $detalle_gestion = new DetalleGestion();
+
+            $detalle_gestion->gestion_id = $request->gestion_id;
+            $detalle_gestion->estado_id = $request->estado_id;
+            $detalle_gestion->save();
+
+            $response = [
+
+                "message" => [
+                    "title" => "Excelente!",
+                    "text" => "El estado de la gestión a sido actualizado exitosamente",
+                    "icon" => "success"
+                ]
+
+            ];
+            
+            return response()->json($response);
+
+        }
+
+        public function habilitar_usuario($data){
+
+            $persona = Persona::find($data->persona_id);
+
+            $primer_nombre = str_split(strtolower($persona->primer_nombre));
+            $primer_apellido = strtolower($persona->primer_apellido);
+            $segundo_apellido = str_split(strtolower($persona->segundo_apellido));
+
+            $usuario = $primer_nombre[0] . $primer_apellido . $segundo_apellido[0];
+
+            $bk_usuario = $usuario;
+            // Validar que dicho usuario no exista
+
+            $valid_user = false;
+            $i = 1;
+
+            while (!$valid_user) {
+                
+                $user_exist = Usuario::where('usuario', $usuario)->first();
+
+                if ($user_exist) {
+
+                    $usuario = $bk_usuario . $i;
+                    $i++;
+
+                }else{
+
+                    $valid_user = true;
+
+                }
+
+            }
+
+            $new_user = new Usuario();
+            $new_user->persona_id = $persona->id;
+            $new_user->rol_id = 7;
+            $new_user->usuario = $usuario;
+            $new_user->password = Crypt::encrypt($usuario);
+            $new_user->save();
+
+            // Asignar al alumno el número de matricula
+            $result = Alumno::where('persona_id', $persona->id)->update(['matricula' => $usuario]);
+            
+            $response = [
+
+                "message" => [
+                    "title" => "Excelente!",
+                    "text" => "Se ha habilitado el usuario " . $new_user->usuario,
+                    "icon" => "success"
+                ]
+
+            ];
+            
             return response()->json($response);
 
         }

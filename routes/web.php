@@ -26,3 +26,9 @@ $router->get('/obtener_usuarios', 'UsuarioController@obtener_usuarios');
 $router->post('/registrar_alumno', 'AlumnoController@registrar_alumno');
 
 $router->post('/obtener_alumnos', 'AlumnoController@obtener_alumnos');
+
+$router->post('/detalle_alumno', 'AlumnoController@detalle_alumno');
+
+$router->post('/estados_alumno', 'AlumnoController@estados_alumno');
+
+$router->post('/actualizar_gestion', 'AlumnoController@actualizar_gestion');

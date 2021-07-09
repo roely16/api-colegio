@@ -14,4 +14,10 @@ class Gestion extends Model{
 
     }
 
+    public function alumno(){
+
+        return $this->belongsTo('App\Alumno');
+
+    }
+
 }
