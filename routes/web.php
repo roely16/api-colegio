@@ -32,3 +32,5 @@ $router->post('/detalle_alumno', 'AlumnoController@detalle_alumno');
 $router->post('/estados_alumno', 'AlumnoController@estados_alumno');
 
 $router->post('/actualizar_gestion', 'AlumnoController@actualizar_gestion');
+
+$router->post('/detalle_gestion', 'GestionController@detalle_gestion');
