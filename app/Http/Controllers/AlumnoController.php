@@ -10,6 +10,10 @@
     use App\DetalleGestion;
     use App\EstadoGestion;
     use App\Usuario;
+    use App\Encargado;
+    use App\AlumnoEncargado;
+    use App\MenuUsuario;
+    use App\RolMenu;
 
     use App\Mail\GestionMail;
     use Illuminate\Support\Facades\Mail;
@@ -69,7 +73,7 @@
             // Crear la gestión de incripción del alumno
             $gestion = new Gestion();
             $gestion->tipo_gestion_id = 1;
-            $gestion->alumno_id = $persona_alumno;
+            $gestion->alumno_id = $alumno_id;
             $gestion->save();
 
             // Crear registro en el historial de la gestión
@@ -112,7 +116,7 @@
             if (!$matricula) {
                 
                 $alumnos = app('db')->select("  SELECT 
-                                                    t2.id,
+                                                    t1.id,
                                                     t2.primer_nombre,
                                                     t2.segundo_nombre,
                                                     t2.primer_apellido,
@@ -304,7 +308,10 @@
 
         public function habilitar_usuario($data){
 
-            $persona = Persona::find($data->persona_id);
+            // Buscar al alumno
+            $alumno = Alumno::find($data->persona_id);
+
+            $persona = Persona::find($alumno->persona_id);
 
             $primer_nombre = str_split(strtolower($persona->primer_nombre));
             $primer_apellido = strtolower($persona->primer_apellido);
@@ -342,9 +349,69 @@
             $new_user->password = Crypt::encrypt($usuario);
             $new_user->save();
 
+            // Habilitar los permisos al usuario
+            $result = $this->habilitar_permisos($new_user);
+
             // Asignar al alumno el número de matricula
             $result = Alumno::where('persona_id', $persona->id)->update(['matricula' => $usuario]);
             
+            // Validar si es necesario habilitar el usuario al encargado 
+            $alumno = Alumno::where('persona_id', $persona->id)->first();
+
+            $alumno_encargado = AlumnoEncargado::where('alumno_id', $alumno->id)->get();
+
+            foreach ($alumno_encargado as $encargado) {
+                
+                $encargado_ = Encargado::find($encargado->encargado_id);
+
+                $usuario = Usuario::where('persona_id', $encargado_->persona_id)->first();
+
+                if (!$usuario) {
+                    
+                    $persona = Persona::find($encargado_->persona_id);
+
+                    $primer_nombre = str_split(strtolower($persona->primer_nombre));
+                    $primer_apellido = strtolower($persona->primer_apellido);
+                    $segundo_apellido = str_split(strtolower($persona->segundo_apellido));
+
+                    $usuario = $primer_nombre[0] . $primer_apellido . $segundo_apellido[0];
+
+                    $bk_usuario = $usuario;
+                    // Validar que dicho usuario no exista
+
+                    $valid_user = false;
+                    $i = 1;
+
+                    while (!$valid_user) {
+                        
+                        $user_exist = Usuario::where('usuario', $usuario)->first();
+
+                        if ($user_exist) {
+
+                            $usuario = $bk_usuario . $i;
+                            $i++;
+
+                        }else{
+
+                            $valid_user = true;
+
+                        }
+
+                    }
+
+                    $new_user = new Usuario();
+                    $new_user->persona_id = $persona->id;
+                    $new_user->rol_id = 6;
+                    $new_user->usuario = $usuario;
+                    $new_user->password = Crypt::encrypt($usuario);
+                    $new_user->save();
+
+                    $result = $this->habilitar_permisos($new_user);
+
+                }
+
+            }
+
             $response = [
 
                 "message" => [
@@ -356,6 +423,23 @@
             ];
             
             return response()->json($response);
+
+        }
+
+        public function habilitar_permisos($data){
+
+            $permisos = RolMenu::where('rol_id', $data->rol_id)->get();
+
+            foreach ($permisos as $permiso) {
+                
+                $menu_usuario = new MenuUsuario();
+                $menu_usuario->menu_id = $permiso->menu_id;
+                $menu_usuario->usuario_id = $data->id;
+                $menu_usuario->save();
+
+            }
+            
+            return $permisos;
 
         }
 
