@@ -34,6 +34,51 @@
 
         }
 
+        public function gestiones_alumno(Request $request){
+
+            $gestiones = app('db')->select("    SELECT t1.*, t2.nombre as gestion
+                                                FROM gestion t1
+                                                INNER JOIN tipo_gestion t2
+                                                ON t1.tipo_gestion_id = t2.id
+                                                WHERE alumno_id = '$request->alumno_id'");
+
+            $headers = [
+                [
+                    "text" => "ID",
+                    "value" => "id",
+                    "width" => "20%",
+                    "sortable" => false
+                ],
+                [
+                    "text" => "Gestión",
+                    "value" => "gestion",
+                    "width" => "30%",
+                    "sortable" => false
+                ],
+                [
+                    "text" => "Fecha",
+                    "value" => "created_at",
+                    "width" => "30%",
+                    "sortable" => false
+                ],
+                [
+                    "text" => "Acciones",
+                    "value" => "action",
+                    "width" => "20%",
+                    "sortable" => false,
+                    "align" => "right"
+                ],
+            ];
+
+            $response = [
+                "items" => $gestiones,
+                "headers" => $headers 
+            ];
+
+            return response()->json($response);
+
+        }
+
     }
 
 ?>

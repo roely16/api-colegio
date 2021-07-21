@@ -36,3 +36,5 @@ $router->post('/actualizar_gestion', 'AlumnoController@actualizar_gestion');
 $router->post('/detalle_gestion', 'GestionController@detalle_gestion');
 
 $router->post('/alumnos_encargado', 'EncargadoController@alumnos_encargado');
+
+$router->post('/gestiones_alumno', 'GestionController@gestiones_alumno');

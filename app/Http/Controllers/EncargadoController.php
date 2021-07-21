@@ -12,7 +12,7 @@
 
             $encargado = Encargado::where('persona_id', $request->persona_id)->first();
 
-            $alumnos = app('db')->select("  SELECT t3.*
+            $alumnos = app('db')->select("  SELECT t3.*, t2.id
                                             FROM alumno_encargado t1
                                             INNER JOIN alumno t2 
                                             ON t1.alumno_id = t2.id

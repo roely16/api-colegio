@@ -254,7 +254,13 @@
 
         public function detalle_alumno(Request $request){
 
-            return response()->json($request);
+            $alumno = Alumno::find($request->alumno_id);
+
+            $persona = Persona::find($alumno->persona_id);
+
+            $persona->nombre_completo = $persona->primer_nombre . ' ' . $persona->segundo_nombre . ' ' . $persona->primer_apellido . ' ' . $persona->segundo_apellido;
+
+            return response()->json($persona);
 
         }
 
